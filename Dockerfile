@@ -8,7 +8,14 @@ RUN pip install --user -r requirements.txt
 FROM python:3.9
 MAINTAINER iskoldt
 COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# ENV PATH=/root/.local/bin:$PATH
+
+ENV \
+    PORT=8080 \
+    HOST=0.0.0.0
+ 
+EXPOSE 8080
+
 COPY . /app
 WORKDIR /app
 ENV dockerrun yes
