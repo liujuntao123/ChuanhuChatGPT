@@ -42,7 +42,7 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
     with gr.Row().style(equal_height=True):
         with gr.Column(scale=5):
             with gr.Row():
-                chatbot = gr.Chatbot(elem_id="chuanhu_chatbot").style(height="100%")
+                chatbot = gr.Chatbot(label="Chuanhu Chat", elem_id="chuanhu_chatbot").style(height="100%")
             with gr.Row():
                 with gr.Column(min_width=225, scale=12):
                     user_input = gr.Textbox(
@@ -87,14 +87,9 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
                         label=i18n("选择LoRA模型"), choices=[], multiselect=False, interactive=True, visible=False
                     )
                     with gr.Row():
-                        use_streaming_checkbox = gr.Checkbox(
-                            label=i18n("实时传输回答"), value=True, visible=ENABLE_STREAMING_OPTION
-                        )
                         single_turn_checkbox = gr.Checkbox(label=i18n("单轮对话"), value=False)
                         use_websearch_checkbox = gr.Checkbox(label=i18n("使用在线搜索"), value=False)
-                        render_latex_checkbox = gr.Checkbox(
-                            label=i18n("渲染LaTeX公式"), value=render_latex, interactive=True, elem_id="render_latex_checkbox"
-                        )
+                        # render_latex_checkbox = gr.Checkbox(label=i18n("渲染LaTeX公式"), value=render_latex, interactive=True, elem_id="render_latex_checkbox")
                     language_select_dropdown = gr.Dropdown(
                         label=i18n("选择回复语言（针对搜索&索引功能）"),
                         choices=REPLY_LANGUAGES,
@@ -167,6 +162,9 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
                 with gr.Tab(label=i18n("高级")):
                     gr.Markdown(i18n("# ⚠️ 务必谨慎更改 ⚠️\n\n如果无法使用请恢复默认设置"))
                     gr.HTML(APPEARANCE_SWITCHER, elem_classes="insert_block")
+                    use_streaming_checkbox = gr.Checkbox(
+                            label=i18n("实时传输回答"), value=True, visible=ENABLE_STREAMING_OPTION
+                        )
                     with gr.Accordion(i18n("参数"), open=False):
                         temperature_slider = gr.Slider(
                             minimum=-0,
@@ -268,6 +266,7 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
 
     gr.Markdown(CHUANHU_DESCRIPTION, elem_id="description")
     gr.HTML(FOOTER.format(versions=versions_html()), elem_id="footer")
+
     # https://github.com/gradio-app/gradio/pull/3296
     def create_greeting(request: gr.Request):
         if hasattr(request, "username") and request.username: # is not None or is not ""
@@ -277,8 +276,9 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
             user_info, user_name = gr.Markdown.update(value=f"", visible=False), ""
         current_model = get_model(model_name = MODELS[DEFAULT_MODEL], access_key = my_api_key)[0]
         current_model.set_user_identifier(user_name)
-        return user_info, user_name, current_model, toggle_like_btn_visibility(DEFAULT_MODEL), *current_model.auto_load(), get_history_names(False, user_name)
-    demo.load(create_greeting, inputs=None, outputs=[user_info, user_name, current_model, like_dislike_area, systemPromptTxt, chatbot, historyFileSelectDropdown], api_name="load")
+        chatbot = gr.Chatbot.update(label=MODELS[DEFAULT_MODEL])
+        return user_info, user_name, current_model, toggle_like_btn_visibility(DEFAULT_MODEL), *current_model.auto_load(), get_history_names(False, user_name), chatbot
+    demo.load(create_greeting, inputs=None, outputs=[user_info, user_name, current_model, like_dislike_area, systemPromptTxt, chatbot, historyFileSelectDropdown, chatbot], api_name="load")
     chatgpt_predict_args = dict(
         fn=predict,
         inputs=[
@@ -390,9 +390,9 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
     keyTxt.change(set_key, [current_model, keyTxt], [user_api_key, status_display], api_name="set_key").then(**get_usage_args)
     keyTxt.submit(**get_usage_args)
     single_turn_checkbox.change(set_single_turn, [current_model, single_turn_checkbox], None)
-    model_select_dropdown.change(get_model, [model_select_dropdown, lora_select_dropdown, user_api_key, temperature_slider, top_p_slider, systemPromptTxt, user_name], [current_model, status_display, lora_select_dropdown], show_progress=True, api_name="get_model")
+    model_select_dropdown.change(get_model, [model_select_dropdown, lora_select_dropdown, user_api_key, temperature_slider, top_p_slider, systemPromptTxt, user_name], [current_model, status_display, chatbot, lora_select_dropdown], show_progress=True, api_name="get_model")
     model_select_dropdown.change(toggle_like_btn_visibility, [model_select_dropdown], [like_dislike_area], show_progress=False)
-    lora_select_dropdown.change(get_model, [model_select_dropdown, lora_select_dropdown, user_api_key, temperature_slider, top_p_slider, systemPromptTxt, user_name], [current_model, status_display], show_progress=True)
+    lora_select_dropdown.change(get_model, [model_select_dropdown, lora_select_dropdown, user_api_key, temperature_slider, top_p_slider, systemPromptTxt, user_name], [current_model, status_display, chatbot], show_progress=True)
 
     # Template
     systemPromptTxt.change(set_system_prompt, [current_model, systemPromptTxt], None)

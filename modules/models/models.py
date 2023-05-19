@@ -599,16 +599,20 @@ def get_model(
         elif model_type == ModelType.MOSS:
             from .MOSS import MOSS_Client
             model = MOSS_Client(model_name, user_name=user_name)
+        elif model_type == ModelType.YuanAI:
+            from .inspurai import Yuan_Client
+            model = Yuan_Client(model_name, api_key=access_key, user_name=user_name, system_prompt=system_prompt)
         elif model_type == ModelType.Unknown:
             raise ValueError(f"未知模型: {model_name}")
         logging.info(msg)
+        chatbot = gr.Chatbot.update(label=model_name)
     except Exception as e:
         logging.error(e)
         msg = f"{STANDARD_ERROR_MSG}: {e}"
     if dont_change_lora_selector:
-        return model, msg
+        return model, msg, chatbot
     else:
-        return model, msg, gr.Dropdown.update(choices=lora_choices, visible=lora_selector_visibility)
+        return model, msg, chatbot, gr.Dropdown.update(choices=lora_choices, visible=lora_selector_visibility)
 
 
 if __name__ == "__main__":
